@@ -70,3 +70,60 @@ class Striker:
     def getRect(self):
         return self.strikerRect
 
+# Kelas Block (blok)
+class Block:
+    def __init__(self, posx, posy, width, height, color):
+        self.posx, self.posy = posx, posy
+        self.width, self.height = width, height
+        self.color = color
+        self.damage = 100
+        self.isBonus = False
+        self.isExtraBall = False
+
+        # Blok putih memiliki nyawa 200, jadi
+        # bola harus mengenainya dua kali agar pecah
+        if color == WHITE:
+            self.health = 200
+        else:
+            self.health = 100
+
+        # Variabel rect dipakai untuk mengatur posisi
+        # dan tabrakan objek
+        self.blockRect = pygame.Rect(
+            self.posx, self.posy, self.width, self.height)
+        self.block = pygame.draw.rect(screen, self.color,
+                                      self.blockRect)
+
+    # Digunakan untuk menggambar objek di layar hanya jika
+    # nyawanya masih lebih dari 0
+    def display(self):
+        if self.health > 0:
+            self.brick = pygame.draw.rect(screen,
+                                          self.color, self.blockRect)
+
+    # Mengubah blok ini menjadi blok bonus oranye
+    # (pecah dengan sekali pukul dan memberi poin tambahan)
+    def makeBonus(self):
+        self.isBonus = True
+        self.color = ORANGE
+        self.health = 100
+
+    # Mengubah blok ini menjadi blok merah pembawa bola tambahan
+    # (pecah dengan sekali pukul dan memunculkan satu bola lagi)
+    def makeExtraBall(self):
+        self.isExtraBall = True
+        self.color = RED
+        self.health = 100
+
+    # Digunakan untuk mengurangi nyawa blok
+    def hit(self):
+        self.health -= self.damage
+
+    # Digunakan untuk mendapatkan rect dari objek
+    def getRect(self):
+        return self.blockRect
+
+    # Digunakan untuk mendapatkan nyawa dari objek
+    def getHealth(self):
+        return self.health
+
