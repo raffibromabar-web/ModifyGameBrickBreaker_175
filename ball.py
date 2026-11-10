@@ -46,3 +46,27 @@ class Striker:
             self.posx, self.posy, self.width, self.height)
         self.striker = pygame.draw.rect(screen,
                                         self.color, self.strikerRect)
+
+    # Digunakan untuk menggambar objek di layar
+    def display(self):
+        self.striker = pygame.draw.rect(screen,
+                                        self.color, self.strikerRect)
+
+    # Digunakan untuk memperbarui keadaan objek
+    def update(self, xFac):
+        self.posx += self.speed * xFac
+
+        # Membatasi striker agar tetap berada di antara
+        # tepi kiri dan kanan layar
+        if self.posx <= 0:
+            self.posx = 0
+        elif self.posx + self.width >= WIDTH:
+            self.posx = WIDTH - self.width
+
+        self.strikerRect = pygame.Rect(
+            self.posx, self.posy, self.width, self.height)
+
+    # Mengembalikan rect dari objek
+    def getRect(self):
+        return self.strikerRect
+
