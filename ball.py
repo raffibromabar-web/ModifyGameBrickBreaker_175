@@ -127,3 +127,58 @@ class Block:
     def getHealth(self):
         return self.health
 
+# Kelas Ball (bola)
+class Ball:
+    def __init__(self, posx, posy, radius, speed, color):
+        self.posx, self.posy = posx, posy
+        self.radius = radius
+        self.speed = speed
+        self.color = color
+        self.xFac, self.yFac = 1, 1
+
+        self.ball = pygame.draw.circle(
+            screen, self.color, (self.posx,
+                                 self.posy), self.radius)
+
+    # Digunakan untuk menampilkan objek di layar
+    def display(self):
+        self.ball = pygame.draw.circle(
+            screen, self.color, (self.posx,
+                                 self.posy), self.radius)
+
+    # Digunakan untuk memperbarui keadaan objek
+    def update(self):
+        self.posx += self.xFac * self.speed
+        self.posy += self.yFac * self.speed
+
+        # Memantulkan bola jika menyentuh
+        # salah satu tepi vertikal (kiri/kanan)
+        if self.posx <= 0 or self.posx >= WIDTH:
+            self.xFac *= -1
+
+        # Pantulan dari tepi paling atas layar
+        if self.posy <= 0:
+            self.yFac *= -1
+
+        # Jika bola menyentuh tepi paling bawah layar,
+        # nilai True dikembalikan
+        if self.posy >= HEIGHT:
+            return True
+
+        return False
+
+    # Mengatur ulang posisi bola
+    def reset(self):
+        self.posx = 0
+        self.posy = HEIGHT
+        self.xFac, self.yFac = 1, -1
+
+    # Digunakan untuk mengubah arah pada sumbu Y
+    def hit(self):
+        self.yFac *= -1
+
+    # Mengembalikan rect dari bola. Dalam hal ini,
+    # rect-nya adalah bola itu sendiri
+    def getRect(self):
+        return self.ball
+
