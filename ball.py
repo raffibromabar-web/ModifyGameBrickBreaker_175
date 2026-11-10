@@ -31,3 +31,18 @@ pygame.display.set_caption("Block Breaker")
 # Untuk mengatur kecepatan frame (frame rate)
 clock = pygame.time.Clock()
 FPS = 30
+
+# Kelas Striker (papan pemukul)
+class Striker:
+    def __init__(self, posx, posy, width, height, speed, color):
+        self.posx, self.posy = posx, posy
+        self.width, self.height = width, height
+        self.speed = speed
+        self.color = color
+
+        # Variabel rect dipakai untuk mengatur posisi
+        # dan tabrakan objek
+        self.strikerRect = pygame.Rect(
+            self.posx, self.posy, self.width, self.height)
+        self.striker = pygame.draw.rect(screen,
+                                        self.color, self.strikerRect)
