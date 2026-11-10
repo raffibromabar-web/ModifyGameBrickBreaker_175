@@ -182,3 +182,178 @@ class Ball:
     def getRect(self):
         return self.ball
 
+
+# Fungsi Bantuan
+
+# Fungsi untuk memeriksa tabrakan antara dua objek
+def collisionChecker(rect, ball):
+    if pygame.Rect.colliderect(rect, ball):
+        return True
+
+    return False
+
+
+# Fungsi untuk membuat dan menyusun blok
+def populateBlocks(blockWidth, blockHeight,
+                   horizontalGap, verticalGap):
+    listOfBlocks = []
+
+    for i in range(0, WIDTH, blockWidth + horizontalGap):
+        for j in range(0, HEIGHT // 2, blockHeight + verticalGap):
+            listOfBlocks.append(
+                Block(i, j, blockWidth, blockHeight,
+                      random.choice([WHITE, GREEN])))
+
+    # Pilih beberapa blok secara acak menjadi blok bonus oranye
+    bonusCount = min(BONUS_BLOCK_COUNT, len(listOfBlocks))
+    for block in random.sample(listOfBlocks, bonusCount):
+        block.makeBonus()
+
+    # Pilih beberapa blok lain secara acak menjadi blok merah (bola tambahan)
+    candidates = [b for b in listOfBlocks if not b.isBonus]
+    extraCount = min(EXTRA_BALL_BLOCK_COUNT, len(candidates))
+    for block in random.sample(candidates, extraCount):
+        block.makeExtraBall()
+
+    return listOfBlocks
+
+
+# Membuat bola di posisi awal
+def createBall():
+    return Ball(BALL_SPAWN_X, BALL_SPAWN_Y, 7, 5, WHITE)
+
+
+# Setelah semua nyawa habis, fungsi ini menunggu sampai
+# pemain menutup game atau menekan spasi, lalu menjalankan aksi yang sesuai
+def gameOver():
+    waiting = True
+
+    while waiting:
+        # Penanganan event
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return True
+
+        # Hindari pemakaian CPU 100% saat menunggu
+        clock.tick(FPS)
+
+
+# Pengelola Game
+def main():
+    running = True
+    lives = 3
+    score = 0
+
+    scoreText = font.render("score", True, WHITE)
+    scoreTextRect = scoreText.get_rect()
+    scoreTextRect.center = (20, HEIGHT - 10)
+
+    livesText = font.render("Lives", True, WHITE)
+    livesTextRect = livesText.get_rect()
+    livesTextRect.center = (120, HEIGHT - 10)
+
+    striker = Striker(0, HEIGHT - 50, 100, 20, 10, WHITE)
+    strikerXFac = 0
+
+    # Daftar bola, karena blok merah bisa menambah jumlah bola
+    balls = [createBall()]
+
+    blockWidth, blockHeight = 40, 15
+    horizontalGap, verticalGap = 20, 20
+
+    listOfBlocks = populateBlocks(
+        blockWidth, blockHeight, horizontalGap, verticalGap)
+
+    # Perulangan utama game
+    while running:
+        screen.fill(BLACK)
+        screen.blit(scoreText, scoreTextRect)
+        screen.blit(livesText, livesTextRect)
+
+        scoreText = font.render("Score : " + str(score), True, WHITE)
+        livesText = font.render("Lives : " + str(lives), True, WHITE)
+
+        # Jika semua blok sudah hancur, blok dibuat ulang
+        if not listOfBlocks:
+            listOfBlocks = populateBlocks(
+                blockWidth, blockHeight, horizontalGap, verticalGap)
+
+        # Semua nyawa habis, sehingga fungsi gameOver() dipanggil
+        if lives <= 0:
+            running = gameOver()
+
+            lives = 3
+            score = 0
+            balls = [createBall()]
+            listOfBlocks = populateBlocks(
+                blockWidth, blockHeight, horizontalGap, verticalGap)
+
+        # Penanganan event
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    strikerXFac = -1
+                if event.key == pygame.K_RIGHT:
+                    strikerXFac = 1
+
+            if event.type == pygame.KEYUP:
+                # PERBAIKAN: kondisi dibungkus tanda kurung
+                # agar tidak berakhir dengan "or" di ujung baris
+                if (event.key == pygame.K_LEFT or
+                        event.key == pygame.K_RIGHT):
+                    strikerXFac = 0
+
+        # Pemeriksaan tabrakan (untuk setiap bola di layar)
+        for ball in balls[:]:
+            if collisionChecker(striker.getRect(), ball.getRect()):
+                ball.hit()
+
+            # Looping pada salinan list agar penghapusan blok aman
+            for block in listOfBlocks[:]:
+                if collisionChecker(block.getRect(), ball.getRect()):
+                    ball.hit()
+                    block.hit()
+
+                    if block.getHealth() <= 0:
+                        listOfBlocks.remove(block)
+                        score += 5
+                        if block.isBonus:
+                            score += BONUS_POINTS
+                        if block.isExtraBall:
+                            # Bola baru muncul di posisi awal
+                            balls.append(createBall())
+
+        # Perbarui
+        striker.update(strikerXFac)
+
+        for ball in balls[:]:
+            if ball.update():
+                if len(balls) > 1:
+                    # Masih ada bola lain yang bermain: hapus bola ini saja
+                    balls.remove(ball)
+                else:
+                    # Bola terakhir jatuh: nyawa berkurang dan bola direset
+                    lives -= 1
+                    ball.reset()
+                    print(lives)
+
+        # Tampilkan
+        striker.display()
+        for ball in balls:
+            ball.display()
+
+        for block in listOfBlocks:
+            block.display()
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+
+if __name__ == "__main__":
+    main()
+    pygame.quit()
